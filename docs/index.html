@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>BRDG: Boundary-Responsive Differentiable Gating</title>
+
+  <meta
+    name="description"
+    content="Official project page for Boundary-Responsive Differentiable Gating for Superpixel-Based Segmentation."
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="hero">
+    <div class="container">
+
+      <p class="tag">CVPR 2026</p>
+
+      <h1>
+        Boundary-Responsive Differentiable Gating<br />
+        for Superpixel-Based Segmentation
+      </h1>
+
+      <p class="subtitle">
+        BRDG improves superpixel-based segmentation by selectively refining
+        ambiguous boundary regions through differentiable gating.
+      </p>
+
+      <p class="authors">
+        <a href="#">Fatma Ahmed</a>
+        · <a href="#">Author 2</a>
+        · <a href="#">Author 3</a>
+        · <a href="#">Author 4</a>
+      </p>
+
+      <p class="affiliations">
+        Institution 1 · Institution 2 · Institution 3
+      </p>
+
+      <div class="button-row">
+        <a class="btn" href="#" target="_blank">
+          <span>📄</span> Paper
+        </a>
+
+        <a class="btn" href="https://github.com/fatma936-sudo/BRDG" target="_blank">
+          <span>💻</span> Code
+        </a>
+
+        <a class="btn" href="#" target="_blank">
+          <span>🤗</span> Hugging Face
+        </a>
+
+        <a class="btn" href="assets/poster.pdf" target="_blank">
+          <span>🖼️</span> Poster
+        </a>
+
+        <a class="btn" href="#" target="_blank">
+          <span>🎥</span> YouTube
+        </a>
+
+        <a class="btn" href="#" target="_blank">
+          <span>📝</span> Medium Tutorial
+        </a>
+      </div>
+
+      <img
+        class="teaser"
+        src="assets/teaser.png"
+        alt="BRDG teaser figure showing image, superpixels, boundary gating, and final segmentation"
+      />
+
+      <p class="caption">
+        BRDG keeps the efficiency of superpixel-level segmentation while recovering
+        fine-grained semantic boundaries using boundary-responsive differentiable gating.
+      </p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section>
+      <h2>Abstract</h2>
+
+      <p>
+        Superpixel-based segmentation offers an efficient alternative to dense
+        pixel-wise segmentation by grouping visually coherent pixels into compact
+        regions. However, this efficiency often comes at the cost of boundary
+        precision, especially around thin structures, small objects, and complex
+        semantic transitions.
+      </p>
+
+      <p>
+        We introduce <strong>Boundary-Responsive Differentiable Gating, BRDG</strong>,
+        a segmentation framework that learns to identify boundary-sensitive regions
+        and selectively activates high-fidelity refinement where it is most needed.
+        Instead of applying expensive dense refinement uniformly across the image,
+        BRDG focuses computation on ambiguous boundary areas while maintaining
+        efficient superpixel-based reasoning elsewhere.
+      </p>
+    </section>
+
+    <section>
+      <h2>Method Overview</h2>
+
+      <div class="method-grid">
+        <div class="method-card">
+          <h3>1. Superpixel Representation</h3>
+          <p>
+            The image is decomposed into compact superpixel regions, reducing the
+            segmentation search space and improving computational efficiency.
+          </p>
+        </div>
+
+        <div class="method-card">
+          <h3>2. Boundary-Aware Gating</h3>
+          <p>
+            BRDG predicts differentiable gates that estimate where semantic
+            boundaries are uncertain and require high-resolution refinement.
+          </p>
+        </div>
+
+        <div class="method-card">
+          <h3>3. Selective Refinement</h3>
+          <p>
+            The model applies detailed refinement only to boundary-sensitive areas,
+            preserving both segmentation accuracy and efficiency.
+          </p>
+        </div>
+      </div>
+
+      <img
+        class="figure"
+        src="assets/architecture.png"
+        alt="Architecture diagram of BRDG"
+      />
+
+      <p class="caption">
+        Overview of the BRDG pipeline. Replace this image with your final method figure.
+      </p>
+    </section>
+
+    <section>
+      <h2>Why BRDG?</h2>
+
+      <div class="highlight-box">
+        <p>
+          Standard superpixel-based segmentation is efficient, but it can smooth
+          or misclassify pixels around object boundaries. BRDG introduces a
+          boundary-responsive gating mechanism that learns where the model should
+          preserve region-level efficiency and where it should perform finer
+          boundary-aware refinement.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Model Variants and Backbones</h2>
+
+      <p>
+        BRDG supports multiple model variants to balance speed, memory usage,
+        and segmentation quality.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>Backbone</th>
+              <th>Input Size</th>
+              <th>Use Case</th>
+              <th>Weights</th>
+              <th>Config</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td><strong>BRDG-Tiny</strong></td>
+              <td>SegFormer-B0</td>
+              <td>512 × 512</td>
+              <td>Fast inference and ablation studies</td>
+              <td><a href="#">Download</a></td>
+              <td><a href="#">YAML</a></td>
+            </tr>
+
+            <tr>
+              <td><strong>BRDG-Base</strong></td>
+              <td>SegFormer-B2</td>
+              <td>512 × 512</td>
+              <td>Balanced accuracy and efficiency</td>
+              <td><a href="#">Download</a></td>
+              <td><a href="#">YAML</a></td>
+            </tr>
+
+            <tr>
+              <td><strong>BRDG-Large</strong></td>
+              <td>SegFormer-B5</td>
+              <td>512 × 512</td>
+              <td>Best segmentation quality</td>
+              <td><a href="#">Download</a></td>
+              <td><a href="#">YAML</a></td>
+            </tr>
+
+            <tr>
+              <td><strong>BRDG-Mobile</strong></td>
+              <td>MobileNet / EfficientNet</td>
+              <td>512 × 512</td>
+              <td>Lightweight deployment</td>
+              <td><a href="#">Download</a></td>
+              <td><a href="#">YAML</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Results</h2>
+
+      <p>
+        Add your quantitative results here once the final experiments are ready.
+        You can report mIoU, Dice, Boundary F1, inference speed, parameters, and FLOPs.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Backbone</th>
+              <th>mIoU ↑</th>
+              <th>Dice ↑</th>
+              <th>Boundary F1 ↑</th>
+              <th>Params ↓</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>Baseline Superpixel Segmentation</td>
+              <td>SegFormer-B0</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+            </tr>
+
+            <tr>
+              <td>BRDG-Tiny</td>
+              <td>SegFormer-B0</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+            </tr>
+
+            <tr>
+              <td>BRDG-Base</td>
+              <td>SegFormer-B2</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+            </tr>
+
+            <tr>
+              <td>BRDG-Large</td>
+              <td>SegFormer-B5</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+              <td>TBD</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Qualitative Results</h2>
+
+      <img
+        class="figure"
+        src="assets/qualitative_results.png"
+        alt="Qualitative segmentation results comparing baseline and BRDG"
+      />
+
+      <p class="caption">
+        Replace this figure with qualitative examples showing image, ground truth,
+        baseline prediction, BRDG prediction, and boundary error map.
+      </p>
+    </section>
+
+    <section>
+      <h2>Installation</h2>
+
+      <pre><code>git clone https://github.com/fatma936-sudo/BRDG.git
+cd BRDG
+
+conda create -n brdg python=3.10 -y
+conda activate brdg
+
+pip install -r requirements.txt</code></pre>
+    </section>
+
+    <section>
+      <h2>Inference</h2>
+
+      <pre><code>python scripts/infer_image.py \
+  --image examples/sample_images/example.png \
+  --config configs/brdg_base_segformer_b2.yaml \
+  --checkpoint weights/brdg_base_segformer_b2.pth \
+  --output outputs/example_prediction.png</code></pre>
+    </section>
+
+    <section>
+      <h2>Training</h2>
+
+      <pre><code>python scripts/train.py \
+  --config configs/brdg_base_segformer_b2.yaml \
+  --data-root /path/to/dataset \
+  --save-dir checkpoints/brdg_base</code></pre>
+    </section>
+
+    <section>
+      <h2>Weights</h2>
+
+      <p>
+        Pretrained BRDG checkpoints will be released through Hugging Face and
+        GitHub Releases.
+      </p>
+
+      <div class="cards">
+        <a class="resource-card" href="#" target="_blank">
+          <span class="resource-icon">🤗</span>
+          <h3>Hugging Face Model Zoo</h3>
+          <p>Download checkpoints, configs, and model cards.</p>
+        </a>
+
+        <a class="resource-card" href="#" target="_blank">
+          <span class="resource-icon">📦</span>
+          <h3>GitHub Releases</h3>
+          <p>Download packaged weights and release notes.</p>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Poster and Video</h2>
+
+      <div class="cards">
+        <a class="resource-card" href="assets/poster.pdf" target="_blank">
+          <span class="resource-icon">🖼️</span>
+          <h3>CVPR Poster</h3>
+          <p>View or download the official conference poster.</p>
+        </a>
+
+        <a class="resource-card" href="#" target="_blank">
+          <span class="resource-icon">🎥</span>
+          <h3>Video Explanation</h3>
+          <p>Watch a short explanation of the motivation, method, and results.</p>
+        </a>
+
+        <a class="resource-card" href="#" target="_blank">
+          <span class="resource-icon">📝</span>
+          <h3>Medium Tutorial</h3>
+          <p>Read the tutorial explaining how to use BRDG on custom data.</p>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Citation</h2>
+
+      <p>
+        If you use BRDG in your work, please cite:
+      </p>
+
+      <pre><code>@inproceedings{ahmed2026brdg,
+  title     = {Boundary-Responsive Differentiable Gating for Superpixel-Based Segmentation},
+  author    = {Ahmed, Fatma and Author, Second and Author, Third and Author, Fourth},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  year      = {2026}
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>Contact</h2>
+
+      <p>
+        For questions, please open an issue on the GitHub repository or contact
+        the authors.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      © 2026 BRDG Authors. Website template adapted for academic project pages.
+    </p>
+  </footer>
+</body>
+</html>
