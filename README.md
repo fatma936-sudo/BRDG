@@ -38,8 +38,8 @@ Superpixel-based segmentation improves efficiency by grouping visually coherent 
 
 BRDG addresses this issue by learning a differentiable gate that identifies boundary-sensitive regions and selectively applies high-resolution refinement only where needed.
 <p align="center">
-  <a href="docs/assets/brdg_architecture.pdf">
-    <img src="docs/assets/brdg_architecture.png"
+  <a href="docs/assets/BRDG_Arch.pdf">
+    <img src="docs/assets/BRDG_Arch.png"
          width="95%"
          alt="Overview of the BRDG architecture">
   </a>
