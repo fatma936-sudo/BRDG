@@ -27,7 +27,7 @@ The project page includes the paper, poster, video, Medium tutorial, model varia
 | Code | https://github.com/fatma936-sudo/BRDG |
 | Hugging Face Weights | Coming soon |
 | Poster | Coming soon |
-| YouTube Video | Coming soon |
+| YouTube Video |https://youtu.be/CnQG5H667N4?si=4OMySAWPf1P4bjHs|
 | Medium Tutorial | Coming soon |
 
 ---
