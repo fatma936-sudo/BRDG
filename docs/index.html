@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BRDG: Boundary-Responsive Differentiable Gating (CVPR 2026)</title>
+<meta name="description" content="Boundary-Responsive Differentiable Gating for Superpixel-Based Segmentation — CVPR 2026 project page: results, method, ablations, training recipe and released checkpoints.">
+<link rel="canonical" href="https://fatma936-sudo.github.io/BRDG/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="BRDG: Boundary-Responsive Differentiable Gating for Superpixel-Based Segmentation (CVPR 2026)">
+<meta property="og:description" content="+4.5 to +7.0 mIoU over pixel-wise baselines at 150.3 FPS with 23.9 M parameters. Code, weights, poster and video.">
+<meta property="og:url" content="https://fatma936-sudo.github.io/BRDG/">
+<meta property="og:image" content="https://cvpr.thecvf.com/media/PosterPDFs/CVPR%202026/36246.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23B4530F'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css?v=3">
+<noscript><style>
+.viewer__controls,.viewer__caption,.bib__copy{display:none}
+#viewer-components .viewer__frame{display:none}
+#viewer-layers .viewer__frame{padding-top:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;background:none}
+#viewer-layers .viewer__frame img{position:static;opacity:1;width:100%;height:auto}
+</style></noscript>
+</head>
+<body>
+
+<!-- Header -->
+<header id="top" class="hero">
+  <div class="frame">
+    <p class="eyebrow">CVPR 2026</p>
+    <h1>Boundary-Responsive Differentiable Gating for Superpixel-Based Segmentation</h1>
+    <p class="formula">BRDG · Y = (1 − g) · Y<sub>c</sub> + g · Y<sub>r</sub></p>
+    <p class="authors">Fatmaelzahraa Ali Ahmed<sup>1</sup>, Zhihe Lu<sup>2</sup>, Gianni Di Caro<sup>3</sup>, Diram Tabaa<sup>3</sup>, Mohamed Hamdy<sup>4</sup>, Muraam Abdel-Ghani<sup>1</sup>, Abdulaziz Al-Ali<sup>4</sup>, Muhammad Arsalan<sup>5</sup>, Shidin Balakrishnan<sup>1</sup>†</p>
+    <p class="affils"><sup>1</sup>Hamad Medical Corporation · <sup>2</sup>Hamad Bin Khalifa University · <sup>3</sup>Carnegie Mellon University Qatar · <sup>4</sup>Qatar University · <sup>5</sup>KINDI Center, Qatar University · †corresponding author</p>
+    <p class="chips">
+      <span class="chip chip--disabled" aria-disabled="true">Paper (coming soon)</span>
+      <a class="chip" href="https://github.com/fatma936-sudo/BRDG" target="_blank" rel="noopener">Code</a>
+      <a class="chip" href="https://github.com/fatma936-sudo/BRDG/releases/tag/v0.1" target="_blank" rel="noopener">Weights (v0.1)</a>
+      <a class="chip" href="https://youtu.be/CnQG5H667N4" target="_blank" rel="noopener">Video</a>
+      <a class="chip" href="#poster">Poster</a>
+    </p>
+    <ul class="stats">
+      <li><strong class="stats__value">+4.5 to +7.0</strong><span class="stats__label">mIoU over pixel-wise baselines</span></li>
+      <li><strong class="stats__value">over +10</strong><span class="stats__label">BF1 (boundary F1) points</span></li>
+      <li><strong class="stats__value">150.3 FPS</strong><span class="stats__label">on an RTX-A6000 Pro</span></li>
+      <li><strong class="stats__value">23.9 M</strong><span class="stats__label">parameters · ×10 faster, ×3.5 smaller than SOTA</span></li>
+    </ul>
+    <p class="lead prose">BRDG is one differentiable network with three cooperating agents. A ResNet-34/U-Net backbone emits soft superpixel assignments A and coarse logits Y<sub>c</sub>; a small boundary detector scores each region and re-projects the scores through A into a dense gate g; a dual-path refinement head is blended as Y = (1 − g)·Y<sub>c</sub> + g·Y<sub>r</sub>, so refinement is spent only along predicted boundaries. The result is +4.5 to +7.0 mIoU over pixel-wise baselines and over +10 BF1 points, at 23.9 M parameters and 150.3 FPS on an RTX-A6000 Pro — ×10 faster and ×3.5 smaller than SOTA.</p>
+  </div>
+</header>
+
+<!-- Jump navigation -->
+<nav class="jump" aria-label="Sections">
+  <div class="frame">
+    <a href="#results">Results</a>
+    <a href="#method">Method</a>
+    <a href="#inside">Inside the network</a>
+    <a href="#ablations">Ablations</a>
+    <a href="#reproduce">Reproduce</a>
+    <a href="#poster">Poster &amp; video</a>
+    <a href="#cite">Cite</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- Results -->
+<section id="results">
+  <div class="frame">
+    <p class="eyebrow">mIoU · four surgical benchmarks</p>
+    <h2>Results</h2>
+
+    <div class="table-scroll">
+      <table class="main-table sticky-col">
+        <caption><strong>Surgical benchmarks.</strong> mIoU on EndoVis 2018 parts (E18-Parts) and tools (E18-Tools), EndoVis 2017 (E17) and Cholec8K; parameters in millions; FPS as reported (BRDG measured on an RTX-A6000 Pro). Bold = best, underline = second best per mIoU column; — = not reported.</caption>
+        <thead>
+          <tr><th scope="col">Method</th><th scope="col" class="n">E18-Parts</th><th scope="col" class="n">E18-Tools</th><th scope="col" class="n">E17</th><th scope="col" class="n">Cholec8K</th><th scope="col" class="n">Params (M)</th><th scope="col" class="n">FPS</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>DeepLabv3+ (R101)</td><td class="n">0.56</td><td class="n best">0.78</td><td class="n second">0.67</td><td class="n">0.56</td><td class="n">61.0</td><td class="n">15.1</td></tr>
+          <tr><td>Mask-RCNN</td><td class="n">0.37</td><td class="n">0.41</td><td class="n">0.38</td><td class="n">0.54</td><td class="n">95.0</td><td class="n na">—</td></tr>
+          <tr><td>U-Net (R34)</td><td class="n">0.53</td><td class="n">0.64</td><td class="n">0.42</td><td class="n">0.43</td><td class="n">13.4</td><td class="n">46.0</td></tr>
+          <tr><td>SegFormer-B5</td><td class="n">0.57</td><td class="n">0.71</td><td class="n">0.63</td><td class="n best">0.74</td><td class="n">84.7</td><td class="n">13.8</td></tr>
+          <tr><td>SwinUNet</td><td class="n second">0.65</td><td class="n">0.59</td><td class="n">0.64</td><td class="n">0.68</td><td class="n">41.0</td><td class="n">150.6</td></tr>
+          <tr><td>nnFormer</td><td class="n">0.60</td><td class="n">0.63</td><td class="n">0.62</td><td class="n">0.62</td><td class="n">53.0</td><td class="n">123.5</td></tr>
+          <tr><td>Mask2Former</td><td class="n">0.49</td><td class="n">0.44</td><td class="n">0.63</td><td class="n">0.69</td><td class="n">47.0</td><td class="n na">—</td></tr>
+          <tr><td>LETNet</td><td class="n">0.57</td><td class="n">0.53</td><td class="n">0.59</td><td class="n">0.58</td><td class="n">0.95</td><td class="n">46.4</td></tr>
+          <tr><td>SSN (superpixel)</td><td class="n">0.37</td><td class="n">0.41</td><td class="n">0.33</td><td class="n">0.42</td><td class="n">0.66</td><td class="n">271.6</td></tr>
+          <tr><td>HERS (superpixel)</td><td class="n">0.45</td><td class="n">0.70</td><td class="n">0.51</td><td class="n">0.58</td><td class="n">7.70</td><td class="n">564.8</td></tr>
+          <tr class="ours"><td>BRDG (Ours)</td><td class="n best">0.72</td><td class="n second">0.75</td><td class="n best">0.76</td><td class="n second">0.73</td><td class="n">23.9</td><td class="n">150.3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols cols--5-7">
+      <div class="table-scroll">
+        <table>
+          <caption><strong>Beyond surgery.</strong> mIoU on Cityscapes and ADE20K under the efficient/foveated protocol. Bold = best, underline = second best.</caption>
+          <thead>
+            <tr><th scope="col">Method</th><th scope="col" class="n">Cityscapes</th><th scope="col" class="n">ADE20K</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Avg + DeepLab</td><td class="n">0.26</td><td class="n">0.39</td></tr>
+            <tr><td>Avg + HRNet</td><td class="n">0.20</td><td class="n">0.43</td></tr>
+            <tr><td>Avg + SegFormer-B4</td><td class="n">0.25</td><td class="n">0.37</td></tr>
+            <tr><td>Avg + SegFormer-B5</td><td class="n">0.27</td><td class="n">0.41</td></tr>
+            <tr><td>LTD</td><td class="n">0.37</td><td class="n">0.41</td></tr>
+            <tr><td>FSNet + DeepLab</td><td class="n second">0.52</td><td class="n">0.55</td></tr>
+            <tr><td>FSNet + HRNet</td><td class="n">0.47</td><td class="n second">0.56</td></tr>
+            <tr><td>FSNet + SegFormer-B4</td><td class="n">0.46</td><td class="n">0.54</td></tr>
+            <tr><td>FSNet + SegFormer-B5</td><td class="n">0.51</td><td class="n">0.55</td></tr>
+            <tr class="ours"><td>BRDG (Ours)</td><td class="n best">0.54</td><td class="n best">0.60</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="fig">
+        <img src="assets/Qualitative_results.png" width="1280" height="1024" loading="lazy" alt="Qualitative segmentation result on EndoVis-2018">
+        <figcaption>Qualitative comparison on EndoVis-2018. Top: parts segmentation. Bottom: tools. BRDG produces cleaner, more coherent masks.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- Method -->
+<section id="method">
+  <div class="frame">
+    <p class="eyebrow">three agents · one differentiable network</p>
+    <h2>Method</h2>
+
+    <figure class="fig fig--wide">
+      <div class="fig__scroll">
+        <img src="assets/BRDG_Arch.jpg" width="3225" height="1094" loading="lazy" alt="BRDG architecture: Agent 1 region and feature creator, Agent 2 boundary detector, Agent 3 refinement, and the gated blend to the final mask">
+      </div>
+      <p class="fig__hint">Swipe to pan the figure.</p>
+      <figcaption>BRDG architecture. (a) The three agents and their heads; (b) gated blending of the coarse and refined predictions. <a href="assets/BRDG_Arch.pdf">Vector PDF</a>.</figcaption>
+    </figure>
+
+    <div class="prose">
+      <p class="equation">Y = (1 − g) · Y<sub>c</sub> + g · Y<sub>r</sub></p>
+      <p class="equation__gloss">g is the dense boundary gate; refinement is applied only where g is high.</p>
+    </div>
+
+    <div class="agents">
+      <article class="agent agent--1">
+        <p class="eyebrow"><span class="swatch"></span>Agent 1</p>
+        <h3>Region &amp; Feature Creator</h3>
+        <p>ResNet-34/U-Net backbone produces dense feature map F. Two 1×1 heads emit superpixel assignment logits and coarse logits Y<sub>c</sub>; temperature softmax yields soft assignments A; soft-pooling gives K region descriptors r<sub>k</sub>.</p>
+      </article>
+      <article class="agent agent--2">
+        <p class="eyebrow"><span class="swatch"></span>Agent 2</p>
+        <h3>Boundary Detector</h3>
+        <p>A small MLP maps each region descriptor r<sub>k</sub> to a boundary probability p<sub>k</sub> in [0,1]. Re-projection through A yields a dense pixel-wise gate g, supervised by a ground-truth boundary map via BCE.</p>
+      </article>
+      <article class="agent agent--3">
+        <p class="eyebrow"><span class="swatch"></span>Agent 3</p>
+        <h3>Refinement Agent</h3>
+        <p>A dual-path classifier: a coarse 1×1 path predicts Y<sub>c</sub>; a refined MLP path operates on region descriptors to give Y<sub>r</sub>. The gate blends them: Y = (1 − g)·Y<sub>c</sub> + g·Y<sub>r</sub>, refining only along predicted boundaries.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Inside the network -->
+<section id="inside">
+  <div class="frame">
+    <p class="eyebrow">interactive · real activations</p>
+    <h2>Inside the network</h2>
+    <p class="prose">Step through what the network computes. Click a panel or press Play; captions explain each view.</p>
+
+    <h3>What each agent contributes</h3>
+    <p class="viewer__sub">EndoVis 2018 validation frame (index 230) · three instruments, one poorly lit at the bottom · ground-truth outline in white</p>
+    <div class="viewer-block" id="viewer-components" data-viewer data-interval="2600">
+      <div class="viewer">
+        <div class="viewer__main">
+          <div class="viewer__frame">
+            <img class="is-active" src="assets/comp_input.png" width="640" height="512" alt="Input panel" data-panel="input" data-desc="An EndoVis 2018 validation frame with three instruments, one poorly lit at the bottom of the field.">
+            <img src="assets/comp_gt.png" width="640" height="512" alt="Ground truth panel" data-panel="gt" data-desc="Ground-truth tool-type annotation. Its outline is drawn in white on every prediction, so deviations are visible." loading="lazy">
+            <img src="assets/comp_assign.png" width="640" height="512" alt="Superpixels panel" data-panel="assign" data-desc="Agent 1. The assignment head turns the feature map into soft superpixel regions A; region borders in white." loading="lazy">
+            <img src="assets/comp_gate.png" width="640" height="512" alt="Gate panel" data-panel="gate" data-desc="Agent 2. Boundary confidence per region, re-projected through A into a dense gate g. Bright means refine here." loading="lazy">
+            <img src="assets/comp_coarse.png" width="640" height="512" alt="Coarse panel" data-panel="coarse" data-desc="The dense pathway alone. Note the bottom instrument: it shatters into four different tool classes." loading="lazy">
+            <img src="assets/comp_refined.png" width="640" height="512" alt="Refined panel" data-panel="refined" data-desc="The region pathway. Classifying pooled regions and scattering back through A recovers that instrument as one coherent object." loading="lazy">
+            <img src="assets/comp_final.png" width="640" height="512" alt="Final panel" data-panel="final" data-desc="Agent 3. The gated blend the model ships: (1 - g) * coarse + g * refined." loading="lazy">
+            <img src="assets/comp_impact.png" width="640" height="512" alt="Impact panel" data-panel="impact" data-desc="What gating changed relative to the coarse pathway: green where it repaired the prediction, red where it damaged it." loading="lazy">
+          </div>
+          <noscript><figure class="viewer__fallback"><img src="assets/brdg_components.png" width="1360" height="596" alt="All eight component panels side by side"><figcaption>Input, ground truth, superpixels, gate, coarse, refined, final and impact. JavaScript is off, so the interactive viewer is replaced by this composite.</figcaption></figure></noscript>
+          <p class="viewer__caption" aria-live="polite">An EndoVis 2018 validation frame with three instruments, one poorly lit at the bottom of the field.</p>
+        </div>
+        <div class="viewer__controls">
+          <span class="eyebrow">Panels</span>
+          <div class="viewer__tabs">
+            <button type="button" class="viewer__tab" data-idx="0" data-panel="input" aria-pressed="true">Input</button>
+            <button type="button" class="viewer__tab" data-idx="1" data-panel="gt" aria-pressed="false">Ground truth</button>
+            <button type="button" class="viewer__tab agent-1" data-idx="2" data-panel="assign" aria-pressed="false">Superpixels</button>
+            <button type="button" class="viewer__tab agent-2" data-idx="3" data-panel="gate" aria-pressed="false">Gate</button>
+            <button type="button" class="viewer__tab" data-idx="4" data-panel="coarse" aria-pressed="false">Coarse</button>
+            <button type="button" class="viewer__tab" data-idx="5" data-panel="refined" aria-pressed="false">Refined</button>
+            <button type="button" class="viewer__tab agent-3" data-idx="6" data-panel="final" aria-pressed="false">Final</button>
+            <button type="button" class="viewer__tab" data-idx="7" data-panel="impact" aria-pressed="false">Impact</button>
+          </div>
+          <div class="viewer__bar">
+            <button type="button" class="viewer__play" aria-pressed="false">Play</button>
+            <span class="viewer__pos" aria-hidden="true">1 / 8</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Encoder–decoder activations</h3>
+    <p class="viewer__sub">ResNet-101 backbone · 512 × 640 input · each panel is PCA-3 of the layer's channels</p>
+    <div class="viewer-block" id="viewer-layers" data-viewer data-interval="2200">
+      <div class="viewer">
+        <div class="viewer__main">
+          <div class="viewer__frame">
+            <img class="is-active" src="assets/layer_stem.png" width="640" height="512" alt="Stem panel" data-panel="stem" data-desc="Stem: 64 x 256 x 320, stride 1/2. 7x7 conv, BN, ReLU: edges and texture only, no semantics yet.">
+            <img src="assets/layer_layer1.png" width="640" height="512" alt="Layer 1 panel" data-panel="layer1" data-desc="Layer 1: 256 x 128 x 160, stride 1/4. First residual stage, still dominated by edges and specular highlights." loading="lazy">
+            <img src="assets/layer_layer2.png" width="640" height="512" alt="Layer 2 panel" data-panel="layer2" data-desc="Layer 2: 512 x 64 x 80, stride 1/8. Mid-level texture, spatially noisy: detail is being traded for depth." loading="lazy">
+            <img src="assets/layer_layer3.png" width="640" height="512" alt="Layer 3 panel" data-panel="layer3" data-desc="Layer 3: 1024 x 32 x 40, stride 1/16. Object-level structure appears; instruments emerge as coherent regions." loading="lazy">
+            <img src="assets/layer_layer4.png" width="640" height="512" alt="Layer 4 panel" data-panel="layer4" data-desc="Layer 4: 2048 x 16 x 20, stride 1/32. Deepest and coarsest: strong semantics, all fine boundary detail gone." loading="lazy">
+            <img src="assets/layer_up4.png" width="640" height="512" alt="Up 4 panel" data-panel="up4" data-desc="Up 4: 512 x 32 x 40, stride 1/16. The decoder starts: upsampled and fused with the Layer 3 skip." loading="lazy">
+            <img src="assets/layer_up3.png" width="640" height="512" alt="Up 3 panel" data-panel="up3" data-desc="Up 3: 256 x 64 x 80, stride 1/8. Fused with Layer 2; instrument shapes sharpen." loading="lazy">
+            <img src="assets/layer_up2.png" width="640" height="512" alt="Up 2 panel" data-panel="up2" data-desc="Up 2: 128 x 128 x 160, stride 1/4. Fused with Layer 1; boundaries recover." loading="lazy">
+            <img src="assets/layer_up1.png" width="640" height="512" alt="Up 1 panel" data-panel="up1" data-desc="Up 1: 64 x 256 x 320, stride 1/2. Fused with the stem skip; the highest-resolution detail returns." loading="lazy">
+            <img src="assets/layer_feat.png" width="640" height="512" alt="Feature map F panel" data-panel="feat" data-desc="Feature map F: 96 x 512 x 640, stride 1/1. The shared field all three agents read; instruments are already separated into distinct regions." loading="lazy">
+          </div>
+          <noscript><p class="viewer__fallback-note">JavaScript is off: the ten activation maps are shown in network order, Stem → Feature map F, matching the table rows below.</p></noscript>
+          <p class="viewer__caption" aria-live="polite">Stem: 64 x 256 x 320, stride 1/2. 7x7 conv, BN, ReLU: edges and texture only, no semantics yet.</p>
+        </div>
+        <div class="viewer__controls">
+          <span class="eyebrow">Panels</span>
+          <div class="viewer__tabs">
+            <button type="button" class="viewer__tab" data-idx="0" data-panel="stem" aria-pressed="true">Stem</button>
+            <button type="button" class="viewer__tab" data-idx="1" data-panel="layer1" aria-pressed="false">Layer 1</button>
+            <button type="button" class="viewer__tab" data-idx="2" data-panel="layer2" aria-pressed="false">Layer 2</button>
+            <button type="button" class="viewer__tab" data-idx="3" data-panel="layer3" aria-pressed="false">Layer 3</button>
+            <button type="button" class="viewer__tab" data-idx="4" data-panel="layer4" aria-pressed="false">Layer 4</button>
+            <button type="button" class="viewer__tab" data-idx="5" data-panel="up4" aria-pressed="false">Up 4</button>
+            <button type="button" class="viewer__tab" data-idx="6" data-panel="up3" aria-pressed="false">Up 3</button>
+            <button type="button" class="viewer__tab" data-idx="7" data-panel="up2" aria-pressed="false">Up 2</button>
+            <button type="button" class="viewer__tab" data-idx="8" data-panel="up1" aria-pressed="false">Up 1</button>
+            <button type="button" class="viewer__tab" data-idx="9" data-panel="feat" aria-pressed="false">Feature map F</button>
+          </div>
+          <div class="viewer__bar">
+            <button type="button" class="viewer__play" aria-pressed="false">Play</button>
+            <span class="viewer__pos" aria-hidden="true">1 / 10</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cols cols--5-7">
+        <div class="table-scroll">
+          <table class="tensor">
+            <caption><strong>Tensor flow.</strong> ResNet-101 backbone, 512 × 640 input (C × H × W; stride relative to input). The highlighted row follows the active panel.</caption>
+            <thead>
+              <tr><th scope="col">Stage</th><th scope="col">Shape</th><th scope="col">Stride</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Input</td><td class="mono">3 × 512 × 640</td><td class="mono">1/1</td></tr>
+              <tr data-idx="0"><td>Stem</td><td class="mono">64 × 256 × 320</td><td class="mono">1/2</td></tr>
+              <tr data-idx="1"><td>Layer 1</td><td class="mono">256 × 128 × 160</td><td class="mono">1/4</td></tr>
+              <tr data-idx="2"><td>Layer 2</td><td class="mono">512 × 64 × 80</td><td class="mono">1/8</td></tr>
+              <tr data-idx="3"><td>Layer 3</td><td class="mono">1024 × 32 × 40</td><td class="mono">1/16</td></tr>
+              <tr data-idx="4"><td>Layer 4</td><td class="mono">2048 × 16 × 20</td><td class="mono">1/32</td></tr>
+              <tr data-idx="5"><td>Up 4</td><td class="mono">512 × 32 × 40</td><td class="mono">1/16</td></tr>
+              <tr data-idx="6"><td>Up 3</td><td class="mono">256 × 64 × 80</td><td class="mono">1/8</td></tr>
+              <tr data-idx="7"><td>Up 2</td><td class="mono">128 × 128 × 160</td><td class="mono">1/4</td></tr>
+              <tr data-idx="8"><td>Up 1</td><td class="mono">64 × 256 × 320</td><td class="mono">1/2</td></tr>
+              <tr data-idx="9"><td>Feature map F</td><td class="mono">96 × 512 × 640</td><td class="mono">1/1</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="note">
+          <p>Each panel is a real activation captured with a forward hook, projected from its channels onto three principal components; nearest-neighbour upsampling keeps the true spatial resolution visible.</p>
+          <p>Shapes in the captions and the table are those of the ResNet-101 backbone at 512 × 640 input.</p>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Ablations -->
+<section id="ablations">
+  <div class="frame">
+    <p class="eyebrow">EndoVis 2018 parts · what each part buys</p>
+    <h2>Ablations</h2>
+
+    <div class="cols cols--7-5">
+      <div class="table-scroll">
+        <table class="ablation">
+          <caption><strong>Component ablation</strong> on EndoVis 2018 parts. — = not reported.</caption>
+          <thead>
+            <tr><th scope="col">Variant</th><th scope="col" class="n">mIoU</th><th scope="col" class="n">Inference (ms)</th><th scope="col" class="n">Peak memory (GB)</th></tr>
+          </thead>
+          <tbody>
+            <tr class="ours"><td>Full model</td><td class="n">0.72</td><td class="n">6.63</td><td class="n">1.05</td></tr>
+            <tr><td>No superpixels (pixel-wise only)</td><td class="n">0.57</td><td class="n na">—</td><td class="n wrap">&gt; +0.40 vs full</td></tr>
+            <tr><td>No boundary head (no BCE, no boundary contrastive)</td><td class="n">0.57</td><td class="n na">—</td><td class="n na">—</td></tr>
+            <tr><td>No refinement (coarse head only)</td><td class="n">0.61</td><td class="n">6.63</td><td class="n">1.17</td></tr>
+            <tr><td>Gate = 0 (coarse logits only)</td><td class="n">0.61</td><td class="n na">—</td><td class="n na">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <aside class="note">
+        <p class="eyebrow">Why the gate matters</p>
+        <p>The learned gate (0.72) outperforms either coarse-only or refine-only. Removing refinement costs 11 mIoU points and improves neither speed nor memory: runtime stays 6.63 ms, peak memory rises 1.05 → 1.17 GB. Gate=0 reproduces No-refine (0.61).</p>
+      </aside>
+    </div>
+
+    <div class="cols cols--7-5">
+      <div>
+        <div class="table-scroll">
+          <table>
+            <caption><strong>Backbone.</strong> mIoU on EndoVis 2018 with parameter count (M). Highlighted row = the configuration used in the main table.</caption>
+            <thead>
+              <tr><th scope="col">Backbone</th><th scope="col" class="n">mIoU</th><th scope="col" class="n">Params (M)</th></tr>
+            </thead>
+            <tbody>
+              <tr class="ours"><td>ResNet-34</td><td class="n">0.72</td><td class="n">23.9</td></tr>
+              <tr><td>ResNet-50</td><td class="n">0.73</td><td class="n">37</td></tr>
+              <tr><td>ResNet-101</td><td class="n">0.73</td><td class="n">56</td></tr>
+              <tr><td>ViT</td><td class="n">0.75</td><td class="n">99</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">ResNet-34 gives the best efficiency-accuracy trade-off; performance scales gracefully with capacity.</p>
+      </div>
+      <aside class="note">
+        <p class="eyebrow">Superpixel count</p>
+        <p>On BSDS500 by Boundary Recall, optimum is K = 500 (BR 0.67); beyond that assignments become overly fragmented and performance degrades, worst at K = 1000.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- Reproduce -->
+<section id="reproduce">
+  <div class="frame">
+    <p class="eyebrow">training recipe · released checkpoints</p>
+    <h2>Reproducibility</h2>
+    <p class="chips">
+      <a class="chip" href="https://github.com/fatma936-sudo/BRDG" target="_blank" rel="noopener">Code on GitHub</a>
+      <a class="chip" href="https://github.com/fatma936-sudo/BRDG/releases/tag/v0.1" target="_blank" rel="noopener">Weights (v0.1 release)</a>
+    </p>
+
+    <h3>Training recipe</h3>
+    <dl class="recipe">
+      <dt>Input</dt><dd>512 × 640</dd>
+      <dt>Encoder</dt><dd>ImageNet-pretrained ResNet-34 (U-Net decoder)</dd>
+      <dt>Feature channels</dt><dd>96</dd>
+      <dt>Superpixels (default K)</dt><dd>100</dd>
+      <dt>Optimizer</dt><dd>AdamW</dd>
+      <dt>Learning rate</dt><dd>1e-4</dd>
+      <dt>Encoder LR</dt><dd>0.1× base</dd>
+      <dt>Weight decay</dt><dd>1e-4</dd>
+      <dt>Epochs</dt><dd>100</dd>
+      <dt>Schedule</dt><dd>Warmup epochs 1–5 (encoder frozen, only seg loss) → Unfreeze &amp; ramp-up epochs 6–10 → full</dd>
+      <dt>Loss</dt><dd>0.5 CE + 0.5 Tversky + boundary BCE + adjacency-boosted contrastive</dd>
+      <dt>Adjacency boost</dt><dd><code>w<sub>ik</sub> = 1 + α · 𝟙[i, k adjacent]</code></dd>
+    </dl>
+
+    <h3>Released checkpoints</h3>
+    <div class="table-scroll">
+      <table class="checkpoints">
+        <caption><strong>Released checkpoints</strong> (v0.1): ResNet-101 backbone, K = 100, 512 × 640 input. Download from the v0.1 release linked above.</caption>
+        <thead>
+          <tr><th scope="col">Checkpoint</th><th scope="col">Dataset</th><th scope="col" class="n">Classes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>brdg_endovis2018_adj3.0.pth</code></td><td>EndoVis 2018 (tools)</td><td class="n">8</td></tr>
+          <tr><td><code>brdg_endovis2017_adj2.0.pth</code></td><td>EndoVis 2017</td><td class="n">8</td></tr>
+          <tr><td><code>brdg_cityscapes_adj3.0.pth</code></td><td>Cityscapes</td><td class="n">19</td></tr>
+          <tr><td><code>brdg_bsds500_adj1.5.pth</code></td><td>BSDS500</td><td class="n">2</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Poster and video -->
+<section id="poster">
+  <div class="frame">
+    <p class="eyebrow">CVPR 2026</p>
+    <h2>Poster &amp; video</h2>
+    <div class="cols cols--8-4">
+      <figure class="fig">
+        <a href="https://cvpr.thecvf.com/media/PosterPDFs/CVPR%202026/36246.png" target="_blank" rel="noopener"><img src="assets/BRDG_poster.png" width="5120" height="2880" loading="lazy" decoding="async" alt="BRDG poster, CVPR 2026"></a>
+        <figcaption>Poster. Click to open the CVPR-hosted copy.</figcaption>
+      </figure>
+      <div class="video">
+        <a class="chip" href="https://youtu.be/CnQG5H667N4" target="_blank" rel="noopener">Watch the video on YouTube</a>
+        <p class="video__url">https://youtu.be/CnQG5H667N4</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cite -->
+<section id="cite">
+  <div class="frame">
+    <p class="eyebrow">citation</p>
+    <h2>Cite</h2>
+    <div class="bib">
+      <button type="button" class="bib__copy">Copy</button>
+      <pre><code>@inproceedings{aliahmed2026brdg,
+  title     = {Boundary-Responsive Differentiable Gating for Superpixel-Based Segmentation},
+  author    = {Ali Ahmed, Fatmaelzahraa and Lu, Zhihe and Di Caro, Gianni and Tabaa, Diram and Hamdy, Mohamed and Abdel-Ghani, Muraam and Al-Ali, Abdulaziz and Arsalan, Muhammad and Balakrishnan, Shidin},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2026}
+}</code></pre>
+    </div>
+    <p class="ack">Supported by Qatar Research Development and Innovation Council (QRDI) grant ARG01-0522-230266.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="frame">BRDG · CVPR 2026 · <a href="https://github.com/fatma936-sudo/BRDG">Code</a></div>
+</footer>
+
+<script>
+(function () {
+  function initViewer(root) {
+    var imgs = root.querySelectorAll('.viewer__frame img');
+    var marks = root.querySelectorAll('[data-idx]');
+    var tabButtons = root.querySelectorAll('.viewer__tab');
+    var tabs = root.querySelector('.viewer__tabs');
+    var caption = root.querySelector('.viewer__caption');
+    var pos = root.querySelector('.viewer__pos');
+    var play = root.querySelector('.viewer__play');
+    var interval = parseInt(root.getAttribute('data-interval'), 10) || 2200;
+    var n = imgs.length;
+    var cur = 0;
+    var timer = null;
+    var io = null;
+    var k;
+
+    if (!n || !tabs || !caption || !pos || !play) { return; }
+
+    function show(i) {
+      var j, mark, idx, desc;
+      for (j = 0; j < n; j++) {
+        if (j === i) {
+          imgs[j].classList.add('is-active');
+          imgs[j].removeAttribute('aria-hidden');
+        } else {
+          imgs[j].classList.remove('is-active');
+          imgs[j].setAttribute('aria-hidden', 'true');
+        }
+      }
+      for (j = 0; j < marks.length; j++) {
+        mark = marks[j];
+        idx = parseInt(mark.getAttribute('data-idx'), 10);
+        if (idx === i) {
+          mark.classList.add('is-active');
+          if (mark.tagName === 'BUTTON') { mark.setAttribute('aria-pressed', 'true'); }
+        } else {
+          mark.classList.remove('is-active');
+          if (mark.tagName === 'BUTTON') { mark.setAttribute('aria-pressed', 'false'); }
+        }
+      }
+      desc = imgs[i].getAttribute('data-desc');
+      caption.textContent = desc || '';
+      pos.textContent = (i + 1) + ' / ' + n;
+      cur = i;
+    }
+
+    function start() {
+      if (timer) { return; }
+      timer = setInterval(function () { show((cur + 1) % n); }, interval);
+      play.textContent = 'Pause';
+      play.setAttribute('aria-pressed', 'true');
+    }
+
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+      play.textContent = 'Play';
+      play.setAttribute('aria-pressed', 'false');
+    }
+
+    function focusTab(i) {
+      var j, b;
+      for (j = 0; j < tabButtons.length; j++) {
+        b = tabButtons[j];
+        if (parseInt(b.getAttribute('data-idx'), 10) === i) { b.focus(); return; }
+      }
+    }
+
+    function onTabClick(ev) {
+      var idx = parseInt(ev.currentTarget.getAttribute('data-idx'), 10);
+      if (isNaN(idx)) { return; }
+      stop();
+      show(idx);
+    }
+
+    for (k = 0; k < tabButtons.length; k++) {
+      tabButtons[k].addEventListener('click', onTabClick);
+    }
+
+    tabs.addEventListener('keydown', function (ev) {
+      var key = ev.key || ev.keyCode;
+      var next;
+      if (key === 'ArrowRight' || key === 'Right' || key === 39) {
+        next = (cur + 1) % n;
+      } else if (key === 'ArrowLeft' || key === 'Left' || key === 37) {
+        next = (cur - 1 + n) % n;
+      } else {
+        return;
+      }
+      ev.preventDefault();
+      stop();
+      show(next);
+      focusTab(next);
+    });
+
+    play.addEventListener('click', function () {
+      if (timer) { stop(); } else { start(); }
+    });
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { stop(); }
+    });
+
+    if (window.IntersectionObserver) {
+      io = new IntersectionObserver(function (entries) {
+        var j;
+        for (j = 0; j < entries.length; j++) {
+          if (!entries[j].isIntersecting || entries[j].intersectionRatio < 0.25) { stop(); }
+        }
+      }, { threshold: 0.25 });
+      io.observe(root);
+    }
+
+    show(0);
+  }
+
+  var roots = document.querySelectorAll('[data-viewer]');
+  var r;
+  for (r = 0; r < roots.length; r++) {
+    initViewer(roots[r]);
+  }
+})();
+
+(function () {
+  var btn = document.querySelector('.bib__copy');
+  if (!btn) { return; }
+  var codeEl = btn.parentNode.querySelector('code');
+  if (!codeEl) { return; }
+  var resetTimer = null;
+
+  function setLabel(text) {
+    btn.textContent = text;
+    if (resetTimer) { clearTimeout(resetTimer); }
+    resetTimer = setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+  }
+
+  function selectCode() {
+    var sel, range;
+    if (!window.getSelection || !document.createRange) { return false; }
+    sel = window.getSelection();
+    range = document.createRange();
+    range.selectNodeContents(codeEl);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    return true;
+  }
+
+  function fallback() {
+    setLabel(selectCode() ? 'Selected' : 'Copy');
+  }
+
+  btn.addEventListener('click', function () {
+    var text = codeEl.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { setLabel('Copied'); }, fallback);
+    } else {
+      fallback();
+    }
+  });
+})();
+</script>
+</body>
+</html>
