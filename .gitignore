@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+
+# training artefacts
+runs/
+out/
+*.pth
+*.pt
+*.log
+metrics.json
+
+# environments
+.venv/
+venv/
+.env
